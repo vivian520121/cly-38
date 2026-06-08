@@ -212,19 +212,12 @@ export const useGameStore = defineStore('game', () => {
   function showHint() {
     if (!isPlaying.value || isCompleted.value) return
 
-    const incorrectPieces = pieces.value.filter(p => !p.isEmpty && p.currentIndex !== p.correctIndex)
+    const correctPieces = pieces.value.filter(p => !p.isEmpty && p.currentIndex === p.correctIndex)
 
-    if (incorrectPieces.length === 0) return
+    if (correctPieces.length === 0) return
 
-    const movableIncorrect = incorrectPieces.filter(p => movablePieceIds.value.includes(p.id))
-
-    if (movableIncorrect.length > 0) {
-      const randomPiece = movableIncorrect[Math.floor(Math.random() * movableIncorrect.length)]
-      hintedPieceId.value = randomPiece.id
-    } else {
-      const randomPiece = incorrectPieces[Math.floor(Math.random() * incorrectPieces.length)]
-      hintedPieceId.value = randomPiece.id
-    }
+    const randomPiece = correctPieces[Math.floor(Math.random() * correctPieces.length)]
+    hintedPieceId.value = randomPiece.id
 
     setTimeout(() => {
       hintedPieceId.value = null
