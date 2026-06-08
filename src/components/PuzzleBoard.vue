@@ -20,7 +20,10 @@ const sortedPieces = computed(() => {
 })
 
 onMounted(() => {
-  gameStore.initGame()
+  const loaded = gameStore.loadFromStorage()
+  if (!loaded) {
+    gameStore.initGame()
+  }
   timerInterval = window.setInterval(() => {
     gameStore.incrementTime()
   }, 1000)

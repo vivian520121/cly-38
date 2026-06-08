@@ -21,6 +21,21 @@ export interface GameResult {
   difficulty: number
 }
 
+export interface GameState {
+  difficulty: 3 | 4 | 5
+  pieces: PuzzlePiece[]
+  initialPieces: PuzzlePiece[]
+  moves: number
+  time: number
+  isPlaying: boolean
+  isCompleted: boolean
+  currentImage: string
+  history: Array<{
+    pieces: PuzzlePiece[]
+    moves: number
+  }>
+}
+
 export interface BuiltinImage {
   id: string
   name: string

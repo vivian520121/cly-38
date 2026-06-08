@@ -12,6 +12,7 @@ const props = defineProps<{
 const gameStore = useGameStore()
 
 const isMovable = computed(() => gameStore.isMovable(props.piece.id))
+const isHinted = computed(() => gameStore.isHinted(props.piece.id))
 
 const pieceStyle = computed(() => {
   const size = 100 / props.boardSize
@@ -46,12 +47,18 @@ function handleClick() {
     class="puzzle-piece absolute cursor-pointer select-none"
     :class="{
       'puzzle-piece-movable': isMovable && gameStore.isPlaying,
-      'puzzle-piece-correct': piece.currentIndex === piece.correctIndex && gameStore.isCompleted
+      'puzzle-piece-correct': piece.currentIndex === piece.correctIndex && gameStore.isCompleted,
+      'puzzle-piece-hinted': isHinted
     }"
     :style="pieceStyle"
     @click="handleClick"
   >
     <div class="puzzle-piece-inner absolute inset-0">
+    </div>
+    <div v-if="isHinted" class="puzzle-hint-overlay absolute inset-0 rounded-lg">
+      <div class="hint-arrow absolute -top-8 left-1/2 transform -translate-x-1/2 text-amber-400 text-2xl animate-bounce">
+        ↑
+      </div>
     </div>
   </div>
   <div
@@ -98,6 +105,39 @@ function handleClick() {
 @keyframes correctPulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
+}
+
+.puzzle-piece-hinted {
+  animation: hintGlow 1s ease-in-out infinite;
+  z-index: 20;
+  border: 3px solid #fbbf24;
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes hintGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(251, 191, 36, 1), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1.03);
+  }
+}
+
+.puzzle-hint-overlay {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hint-arrow {
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
+  animation: bounce 0.6s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-5px); }
 }
 
 .puzzle-empty {

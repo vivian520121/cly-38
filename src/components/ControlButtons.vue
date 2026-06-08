@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RotateCcw, Shuffle, Image, Play } from 'lucide-vue-next'
+import { RotateCcw, Shuffle, Image, Play, Undo2, Lightbulb } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/gameStore'
 
 const gameStore = useGameStore()
@@ -19,6 +19,14 @@ function handleRestart() {
 function handleChangeImage() {
   gameStore.showImageSelector = true
 }
+
+function handleUndo() {
+  gameStore.undo()
+}
+
+function handleHint() {
+  gameStore.showHint()
+}
 </script>
 
 <template>
@@ -30,6 +38,26 @@ function handleChangeImage() {
     >
       <Play :size="18" />
       开始游戏
+    </button>
+
+    <button
+      class="control-btn control-btn-secondary flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+      :disabled="!gameStore.canUndo"
+      :class="{ 'opacity-50 cursor-not-allowed': !gameStore.canUndo }"
+      @click="handleUndo"
+    >
+      <Undo2 :size="18" />
+      撤销
+    </button>
+
+    <button
+      class="control-btn control-btn-hint flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+      :disabled="!gameStore.isPlaying || gameStore.isCompleted"
+      :class="{ 'opacity-50 cursor-not-allowed': !gameStore.isPlaying || gameStore.isCompleted }"
+      @click="handleHint"
+    >
+      <Lightbulb :size="18" />
+      提示
     </button>
 
     <button
@@ -87,6 +115,15 @@ function handleChangeImage() {
 .control-btn-accent:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+}
+
+.control-btn-hint {
+  @apply bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/30;
+}
+
+.control-btn-hint:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
 }
 
 .control-btn:active {
