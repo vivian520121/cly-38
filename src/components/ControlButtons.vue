@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RotateCcw, Shuffle, Image, Play, Undo2, Lightbulb } from 'lucide-vue-next'
+import { RotateCcw, Shuffle, Image, Play, Undo2, Lightbulb, LogOut, Bot, Pause, PlayCircle, StopCircle } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/gameStore'
 
 const gameStore = useGameStore()
@@ -26,6 +26,26 @@ function handleUndo() {
 
 function handleHint() {
   gameStore.showHint()
+}
+
+function handleAbandon() {
+  gameStore.openAbandonConfirm()
+}
+
+function handleAutoSolve() {
+  if (gameStore.isAutoSolving) {
+    if (gameStore.isAutoPaused) {
+      gameStore.resumeAutoSolve()
+    } else {
+      gameStore.pauseAutoSolve()
+    }
+  } else {
+    gameStore.startAutoSolve()
+  }
+}
+
+function handleStopAutoSolve() {
+  gameStore.stopAutoSolve()
 }
 </script>
 
@@ -83,6 +103,38 @@ function handleHint() {
       <Image :size="18" />
       换图
     </button>
+
+    <button
+      class="control-btn control-btn-auto flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+      :disabled="!gameStore.isPlaying || gameStore.isCompleted || gameStore.isCalculating"
+      :class="{ 'opacity-50 cursor-not-allowed': !gameStore.isPlaying || gameStore.isCompleted || gameStore.isCalculating }"
+      @click="handleAutoSolve"
+    >
+      <Bot v-if="!gameStore.isAutoSolving && !gameStore.isCalculating" :size="18" />
+      <div v-else-if="gameStore.isCalculating" class="w-[18px] h-[18px] border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <Pause v-else-if="!gameStore.isAutoPaused" :size="18" />
+      <PlayCircle v-else :size="18" />
+      {{ gameStore.isCalculating ? '计算中...' : !gameStore.isAutoSolving ? '自动拼图' : gameStore.isAutoPaused ? '继续' : '暂停' }}
+    </button>
+
+    <button
+      v-if="gameStore.isAutoSolving"
+      class="control-btn control-btn-secondary flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+      @click="handleStopAutoSolve"
+    >
+      <StopCircle :size="18" />
+      停止
+    </button>
+
+    <button
+      class="control-btn control-btn-danger flex items-center gap-2 px-5 py-3 rounded-xl font-medium"
+      :disabled="!gameStore.isPlaying && !gameStore.isCompleted"
+      :class="{ 'opacity-50 cursor-not-allowed': !gameStore.isPlaying && !gameStore.isCompleted }"
+      @click="handleAbandon"
+    >
+      <LogOut :size="18" />
+      放弃
+    </button>
   </div>
 </template>
 
@@ -128,5 +180,23 @@ function handleHint() {
 
 .control-btn:active {
   transform: translateY(0);
+}
+
+.control-btn-auto {
+  @apply bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30;
+}
+
+.control-btn-auto:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+}
+
+.control-btn-danger {
+  @apply bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/30;
+}
+
+.control-btn-danger:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
 }
 </style>

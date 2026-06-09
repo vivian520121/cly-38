@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { PuzzlePiece, GameResult, GameState, UserInfo } from '@/types'
 import { BUILTIN_IMAGES } from '@/types'
-import { createPuzzle, shufflePuzzle, isAdjacent, swapPieces, checkCompletion, getMovablePieces } from '@/utils/puzzle'
+import { createPuzzle, shufflePuzzle, isAdjacent, swapPieces, checkCompletion, getMovablePieces, solvePuzzle } from '@/utils/puzzle'
 import { calculateScore, formatTime, getBestScore, saveBestScore } from '@/utils/score'
 
 const STORAGE_KEY = 'puzzle_game_state'
@@ -100,12 +100,25 @@ export const useGameStore = defineStore('game', () => {
   const showShareModal = ref(false)
   const generatedPosterUrl = ref<string | null>(null)
 
+  const isAutoSolving = ref(false)
+  const isAutoPaused = ref(false)
+  const isCalculating = ref(false)
+  const autoSolveSteps = ref<number[][]>([])
+  const autoSolveIndex = ref(0)
+  const autoSolveSpeed = ref(500)
+  const showAbandonConfirm = ref(false)
+  let autoSolveTimer: number | null = null
+
   const emptyPiece = computed(() => pieces.value.find(p => p.isEmpty)!)
   const movablePieceIds = computed(() => getMovablePieces(pieces.value).map(p => p.id))
   const formattedTime = computed(() => formatTime(time.value))
   const bestScoreKey = computed(() => `${difficulty.value}_${currentImage.value.substring(0, 30)}`)
   const bestScore = computed(() => getBestScore(bestScoreKey.value))
   const canUndo = computed(() => history.value.length > 0)
+  const autoSolveProgress = computed(() => {
+    if (autoSolveSteps.value.length === 0) return 0
+    return Math.round((autoSolveIndex.value / autoSolveSteps.value.length) * 100)
+  })
 
   function saveToStorage() {
     const state: GameState = {
@@ -326,6 +339,106 @@ export const useGameStore = defineStore('game', () => {
     generatedPosterUrl.value = url
   }
 
+  function openAbandonConfirm() {
+    if (!isPlaying.value && !isCompleted.value) return
+    stopAutoSolve()
+    showAbandonConfirm.value = true
+  }
+
+  function closeAbandonConfirm() {
+    showAbandonConfirm.value = false
+  }
+
+  function abandonGame() {
+    stopAutoSolve()
+    pieces.value = createPuzzle(difficulty.value)
+    initialPieces.value = JSON.parse(JSON.stringify(pieces.value))
+    moves.value = 0
+    time.value = 0
+    isPlaying.value = false
+    isCompleted.value = false
+    gameResult.value = null
+    history.value = []
+    hintedPieceId.value = null
+    showAbandonConfirm.value = false
+    saveToStorage()
+  }
+
+  function startAutoSolve() {
+    if (!isPlaying.value || isCompleted.value || isAutoSolving.value || isCalculating.value) return
+
+    isCalculating.value = true
+
+    setTimeout(() => {
+      const steps = solvePuzzle(pieces.value, difficulty.value)
+      isCalculating.value = false
+
+      if (steps.length === 0) return
+
+      autoSolveSteps.value = steps
+      autoSolveIndex.value = 0
+      isAutoSolving.value = true
+      isAutoPaused.value = false
+      runAutoSolveStep()
+    }, 50)
+  }
+
+  function runAutoSolveStep() {
+    if (!isAutoSolving.value || isAutoPaused.value) return
+    if (autoSolveIndex.value >= autoSolveSteps.value.length) {
+      stopAutoSolve()
+      return
+    }
+
+    const step = autoSolveSteps.value[autoSolveIndex.value]
+    const [pieceId, emptyId] = step
+
+    pieces.value = swapPieces(pieces.value, pieceId, emptyId, difficulty.value)
+    moves.value++
+    autoSolveIndex.value++
+
+    if (checkCompletion(pieces.value)) {
+      stopAutoSolve()
+      completeGame()
+      return
+    }
+
+    saveToStorage()
+
+    autoSolveTimer = window.setTimeout(() => {
+      runAutoSolveStep()
+    }, autoSolveSpeed.value)
+  }
+
+  function pauseAutoSolve() {
+    isAutoPaused.value = true
+    if (autoSolveTimer) {
+      clearTimeout(autoSolveTimer)
+      autoSolveTimer = null
+    }
+  }
+
+  function resumeAutoSolve() {
+    if (!isAutoSolving.value || !isAutoPaused.value) return
+    isAutoPaused.value = false
+    runAutoSolveStep()
+  }
+
+  function stopAutoSolve() {
+    isAutoSolving.value = false
+    isAutoPaused.value = false
+    autoSolveSteps.value = []
+    autoSolveIndex.value = 0
+    if (autoSolveTimer) {
+      clearTimeout(autoSolveTimer)
+      autoSolveTimer = null
+    }
+  }
+
+  function setAutoSolveSpeed(speed: number) {
+    autoSolveSpeed.value = Math.max(100, Math.min(2000, speed))
+  }
+
   return {
     difficulty,
     pieces,
@@ -345,6 +458,14 @@ export const useGameStore = defineStore('game', () => {
     userInfo,
     showShareModal,
     generatedPosterUrl,
+    isAutoSolving,
+    isAutoPaused,
+    isCalculating,
+    autoSolveSteps,
+    autoSolveIndex,
+    autoSolveSpeed,
+    autoSolveProgress,
+    showAbandonConfirm,
     initGame,
     startGame,
     shuffle,
@@ -364,6 +485,14 @@ export const useGameStore = defineStore('game', () => {
     randomizeUserInfo,
     openShareModal,
     closeShareModal,
-    setPosterUrl
+    setPosterUrl,
+    openAbandonConfirm,
+    closeAbandonConfirm,
+    abandonGame,
+    startAutoSolve,
+    pauseAutoSolve,
+    resumeAutoSolve,
+    stopAutoSolve,
+    setAutoSolveSpeed
   }
 })

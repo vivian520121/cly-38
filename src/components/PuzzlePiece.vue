@@ -13,6 +13,11 @@ const gameStore = useGameStore()
 
 const isMovable = computed(() => gameStore.isMovable(props.piece.id))
 const isHinted = computed(() => gameStore.isHinted(props.piece.id))
+const isAutoMoving = computed(() => {
+  if (!gameStore.isAutoSolving || gameStore.autoSolveSteps.length === 0) return false
+  const currentStep = gameStore.autoSolveSteps[gameStore.autoSolveIndex - 1]
+  return currentStep && currentStep[0] === props.piece.id
+})
 
 const pieceStyle = computed(() => {
   const size = 100 / props.boardSize
@@ -32,6 +37,7 @@ const pieceStyle = computed(() => {
 })
 
 function handleClick() {
+  if (gameStore.isAutoSolving) return
   if (!props.piece.isEmpty) {
     if (!gameStore.isPlaying && !gameStore.isCompleted) {
       gameStore.startGame()
@@ -46,9 +52,10 @@ function handleClick() {
     v-if="!piece.isEmpty"
     class="puzzle-piece absolute cursor-pointer select-none"
     :class="{
-      'puzzle-piece-movable': isMovable && gameStore.isPlaying,
+      'puzzle-piece-movable': isMovable && gameStore.isPlaying && !gameStore.isAutoSolving,
       'puzzle-piece-correct': piece.currentIndex === piece.correctIndex && gameStore.isCompleted,
-      'puzzle-piece-hinted': isHinted
+      'puzzle-piece-hinted': isHinted,
+      'puzzle-piece-auto-moving': isAutoMoving
     }"
     :style="pieceStyle"
     @click="handleClick"
@@ -148,5 +155,27 @@ function handleClick() {
 @keyframes emptyPulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.6; }
+}
+
+.puzzle-piece-auto-moving {
+  z-index: 30;
+  animation: autoMoveGlow 0.5s ease-in-out;
+  border: 3px solid #8b5cf6;
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes autoMoveGlow {
+  0% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 1), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
 }
 </style>

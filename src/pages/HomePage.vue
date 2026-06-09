@@ -6,6 +6,8 @@ import ControlButtons from '@/components/ControlButtons.vue'
 import ImageSelector from '@/components/ImageSelector.vue'
 import SuccessModal from '@/components/SuccessModal.vue'
 import ReferenceImage from '@/components/ReferenceImage.vue'
+import AbandonConfirm from '@/components/AbandonConfirm.vue'
+import AutoSolveProgress from '@/components/AutoSolveProgress.vue'
 import { Puzzle } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/gameStore'
 
@@ -41,6 +43,8 @@ const gameStore = useGameStore()
       <div class="game-layout grid lg:grid-cols-[1fr_auto] gap-6 items-start">
         <div class="game-main space-y-6">
           <StatsPanel />
+
+          <AutoSolveProgress />
 
           <div class="game-hint text-center">
             <p class="text-white/50 text-sm">
@@ -100,6 +104,7 @@ const gameStore = useGameStore()
 
     <ImageSelector />
     <SuccessModal />
+    <AbandonConfirm />
   </div>
 </template>
 
