@@ -9,9 +9,39 @@ const STORAGE_KEY = 'puzzle_game_state'
 const USER_INFO_KEY = 'puzzle_user_info'
 const MAX_UNDO_STEPS = 3
 
+function createAvatarSVG(name: string): string {
+  const colors = [
+    ['#8b5cf6', '#ec4899'],
+    ['#06b6d4', '#3b82f6'],
+    ['#10b981', '#06b6d4'],
+    ['#f59e0b', '#ef4444'],
+    ['#ec4899', '#f43f5e'],
+    ['#6366f1', '#8b5cf6'],
+    ['#14b8a6', '#0ea5e9'],
+    ['#eab308', '#f97316'],
+  ]
+  const colorIndex = name.charCodeAt(0) % colors.length
+  const [c1, c2] = colors[colorIndex]
+  const initial = name.charAt(0).toUpperCase()
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${c1}"/>
+          <stop offset="100%" style="stop-color:${c2}"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#g)"/>
+      <text x="50" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">${initial}</text>
+    </svg>
+  `
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
 const DEFAULT_USER_INFO: UserInfo = {
   nickname: '拼图玩家',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=puzzle'
+  avatar: createAvatarSVG('拼图玩家')
 }
 
 function loadUserInfo(): UserInfo {
@@ -43,9 +73,8 @@ function generateRandomNickname(): string {
 }
 
 function generateRandomAvatar(): string {
-  const seeds = ['puzzle', 'game', 'player', 'winner', 'champion', 'master', 'pro', 'legend']
-  const seed = seeds[Math.floor(Math.random() * seeds.length)] + Date.now()
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
+  const randomName = Math.random().toString(36).substring(2, 8)
+  return createAvatarSVG(randomName)
 }
 
 interface HistoryState {

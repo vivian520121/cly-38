@@ -8,15 +8,71 @@ const DEFAULT_CONFIG: PosterConfig = {
   gradientColors: ['#8b5cf6', '#ec4899', '#f59e0b']
 }
 
+const IMAGE_LOAD_TIMEOUT = 5000
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Image load timeout'))
+    }, IMAGE_LOAD_TIMEOUT)
+
     const img = new Image()
     img.crossOrigin = 'anonymous'
-    img.onload = () => resolve(img)
-    img.onerror = reject
+    img.onload = () => {
+      clearTimeout(timeoutId)
+      resolve(img)
+    }
+    img.onerror = () => {
+      clearTimeout(timeoutId)
+      reject(new Error('Image load failed'))
+    }
     img.src = src
   })
 }
+
+function createDefaultAvatar(name: string): string {
+  const colors = [
+    ['#8b5cf6', '#ec4899'],
+    ['#06b6d4', '#3b82f6'],
+    ['#10b981', '#06b6d4'],
+    ['#f59e0b', '#ef4444'],
+    ['#ec4899', '#f43f5e'],
+    ['#6366f1', '#8b5cf6'],
+  ]
+  const colorIndex = name.charCodeAt(0) % colors.length
+  const [c1, c2] = colors[colorIndex]
+  const initial = name.charAt(0).toUpperCase()
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:${c1}"/>
+          <stop offset="100%" style="stop-color:${c2}"/>
+        </linearGradient>
+      </defs>
+      <rect width="100" height="100" fill="url(#g)"/>
+      <text x="50" y="58" text-anchor="middle" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white">${initial}</text>
+    </svg>
+  `)}`
+}
+
+function createPlaceholderPattern(): string {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#1e1b4b"/>
+          <stop offset="100%" style="stop-color:#4c1d95"/>
+        </linearGradient>
+      </defs>
+      <rect width="200" height="200" fill="url(#bg)"/>
+      <text x="100" y="110" text-anchor="middle" font-size="60">🧩</text>
+    </svg>
+  `)}`
+}
+
+const PLACEHOLDER_IMAGE = createPlaceholderPattern()
 
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
@@ -82,56 +138,67 @@ async function drawUserAvatar(
   avatarUrl: string,
   x: number,
   y: number,
-  size: number
+  size: number,
+  nickname: string = '玩家'
 ) {
+  let img: HTMLImageElement | null = null
+
   try {
-    const img = await loadImage(avatarUrl)
-    ctx.save()
-    ctx.beginPath()
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
-    ctx.closePath()
-    ctx.clip()
+    img = await loadImage(avatarUrl)
+  } catch {
+    try {
+      const fallbackUrl = createDefaultAvatar(nickname)
+      img = await loadImage(fallbackUrl)
+    } catch {
+      img = null
+    }
+  }
 
-    ctx.fillStyle = '#334155'
-    ctx.fillRect(x, y, size, size)
+  ctx.save()
+  ctx.beginPath()
+  ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
+  ctx.closePath()
+  ctx.clip()
 
+  if (img) {
     const scale = Math.max(size / img.width, size / img.height)
     const scaledWidth = img.width * scale
     const scaledHeight = img.height * scale
     const offsetX = x + (size - scaledWidth) / 2
     const offsetY = y + (size - scaledHeight) / 2
     ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight)
-
-    ctx.restore()
-
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 4
-    ctx.beginPath()
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
-    ctx.stroke()
-
-    const glowGradient = ctx.createRadialGradient(
-      x + size / 2, y + size / 2, size / 2,
-      x + size / 2, y + size / 2, size / 2 + 10
-    )
-    glowGradient.addColorStop(0, 'rgba(251, 191, 36, 0.3)')
-    glowGradient.addColorStop(1, 'transparent')
-    ctx.strokeStyle = glowGradient
-    ctx.lineWidth = 10
-    ctx.beginPath()
-    ctx.arc(x + size / 2, y + size / 2, size / 2 + 5, 0, Math.PI * 2)
-    ctx.stroke()
-  } catch {
-    ctx.fillStyle = '#475569'
-    ctx.beginPath()
-    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.fillStyle = '#94a3b8'
+  } else {
+    const gradient = ctx.createLinearGradient(x, y, x + size, y + size)
+    gradient.addColorStop(0, '#8b5cf6')
+    gradient.addColorStop(1, '#ec4899')
+    ctx.fillStyle = gradient
+    ctx.fillRect(x, y, size, size)
+    ctx.fillStyle = '#ffffff'
     ctx.font = 'bold 48px sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.fillText('🎮', x + size / 2, y + size / 2)
+    ctx.fillText(nickname.charAt(0).toUpperCase(), x + size / 2, y + size / 2)
   }
+
+  ctx.restore()
+
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2)
+  ctx.stroke()
+
+  const glowGradient = ctx.createRadialGradient(
+    x + size / 2, y + size / 2, size / 2,
+    x + size / 2, y + size / 2, size / 2 + 10
+  )
+  glowGradient.addColorStop(0, 'rgba(251, 191, 36, 0.3)')
+  glowGradient.addColorStop(1, 'transparent')
+  ctx.strokeStyle = glowGradient
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.arc(x + size / 2, y + size / 2, size / 2 + 5, 0, Math.PI * 2)
+  ctx.stroke()
 }
 
 function drawTrophy(ctx: CanvasRenderingContext2D, x: number, y: number, size: number) {
@@ -354,7 +421,7 @@ export async function generatePoster(options: GeneratePosterOptions): Promise<st
   ctx.fillText(`成功还原 ${gameResult.difficulty}×${gameResult.difficulty} 拼图`, width / 2, currentY)
   currentY += 60
 
-  await drawUserAvatar(ctx, userInfo.avatar, width / 2 - 60, currentY, 120)
+  await drawUserAvatar(ctx, userInfo.avatar, width / 2 - 60, currentY, 120, userInfo.nickname)
   currentY += 140
 
   ctx.fillStyle = '#ffffff'
@@ -390,48 +457,38 @@ export async function generatePoster(options: GeneratePosterOptions): Promise<st
   drawHonorBadges(ctx, badges, 40, currentY, width - 80)
   currentY += badges.length > 0 ? 180 : 0
 
+  let puzzleImg: HTMLImageElement | null = null
   if (puzzleImage) {
     try {
-      const img = await loadImage(puzzleImage)
-      const previewSize = 160
-      const previewX = (width - previewSize) / 2
-      const previewY = currentY
-
-      drawRoundedRect(ctx, previewX - 5, previewY - 5, previewSize + 10, previewSize + 10, 20)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'
-      ctx.fill()
-
-      ctx.save()
-      drawRoundedRect(ctx, previewX, previewY, previewSize, previewSize, 16)
-      ctx.clip()
-      ctx.drawImage(img, previewX, previewY, previewSize, previewSize)
-      ctx.restore()
-
-      currentY += previewSize + 40
+      puzzleImg = await loadImage(puzzleImage)
     } catch {
-      // Ignore image load error
+      try {
+        puzzleImg = await loadImage(PLACEHOLDER_IMAGE)
+      } catch {
+        puzzleImg = null
+      }
     }
+  }
+
+  if (puzzleImg) {
+    const previewSize = 160
+    const previewX = (width - previewSize) / 2
+    const previewY = currentY
+
+    drawRoundedRect(ctx, previewX - 5, previewY - 5, previewSize + 10, previewSize + 10, 20)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'
+    ctx.fill()
+
+    ctx.save()
+    drawRoundedRect(ctx, previewX, previewY, previewSize, previewSize, 16)
+    ctx.clip()
+    ctx.drawImage(puzzleImg, previewX, previewY, previewSize, previewSize)
+    ctx.restore()
+
+    currentY += previewSize + 40
   }
 
   drawFooter(ctx, width, height)
 
   return canvas.toDataURL('image/png', 1.0)
-}
-
-export function downloadPoster(dataUrl: string, filename: string = 'puzzle-victory') {
-  const link = document.createElement('a')
-  link.download = `${filename}-${Date.now()}.png`
-  link.href = dataUrl
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-}
-
-export function copyImageToClipboard(dataUrl: string): Promise<void> {
-  return fetch(dataUrl)
-    .then(res => res.blob())
-    .then(blob => {
-      const item = new ClipboardItem({ 'image/png': blob })
-      return navigator.clipboard.write([item])
-    })
 }

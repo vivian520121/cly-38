@@ -166,57 +166,93 @@ export async function nativeShare(shareData: ShareData, files?: File[]): Promise
 }
 
 export function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
-  return fetch(dataUrl)
-    .then(res => res.blob())
-    .then(blob => new File([blob], filename, { type: 'image/png' }))
+  return new Promise((resolve, reject) => {
+    try {
+      const arr = dataUrl.split(',')
+      const mimeMatch = arr[0].match(/:(.*?);/)
+      const mime = mimeMatch ? mimeMatch[1] : 'image/png'
+      const bstr = atob(arr[1])
+      let n = bstr.length
+      const u8arr = new Uint8Array(n)
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+      }
+      const blob = new Blob([u8arr], { type: mime })
+      resolve(new File([blob], filename, { type: mime }))
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
 export function copyTextToClipboard(text: string): Promise<boolean> {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    return navigator.clipboard.writeText(text)
-      .then(() => true)
-      .catch(() => false)
-  }
+  return new Promise((resolve) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => resolve(true))
+        .catch(() => {
+          resolve(fallbackCopyText(text))
+        })
+    } else {
+      resolve(fallbackCopyText(text))
+    }
+  })
+}
 
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
-  document.body.appendChild(textarea)
-  textarea.select()
-
+function fallbackCopyText(text: string): boolean {
   try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    textarea.style.left = '-9999px'
+    textarea.style.top = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    textarea.setSelectionRange(0, text.length)
+
     const success = document.execCommand('copy')
     document.body.removeChild(textarea)
-    return Promise.resolve(success)
+    return success
   } catch {
-    document.body.removeChild(textarea)
-    return Promise.resolve(false)
+    return false
   }
 }
 
 export function copyImageToClipboard(dataUrl: string): Promise<boolean> {
-  return fetch(dataUrl)
-    .then(res => res.blob())
-    .then(blob => {
-      if (navigator.clipboard && window.ClipboardItem) {
-        const item = new ClipboardItem({ [blob.type]: blob })
-        return navigator.clipboard.write([item])
-          .then(() => true)
-          .catch(() => false)
-      }
-      return false
-    })
-    .catch(() => false)
+  return new Promise((resolve) => {
+    if (!navigator.clipboard || !window.ClipboardItem) {
+      resolve(false)
+      return
+    }
+
+    dataUrlToFile(dataUrl, 'puzzle-victory.png')
+      .then(file => {
+        const item = new ClipboardItem({ [file.type]: file })
+        navigator.clipboard.write([item])
+          .then(() => resolve(true))
+          .catch(() => resolve(false))
+      })
+      .catch(() => resolve(false))
+  })
 }
 
 export function downloadImage(dataUrl: string, filename: string = 'puzzle-victory'): void {
-  const link = document.createElement('a')
-  link.download = `${filename}-${Date.now()}.png`
-  link.href = dataUrl
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
+  try {
+    const link = document.createElement('a')
+    link.download = `${filename}-${Date.now()}.png`
+    link.href = dataUrl
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    setTimeout(() => {
+      document.body.removeChild(link)
+    }, 100)
+  } catch (error) {
+    console.error('Download failed:', error)
+    window.open(dataUrl, '_blank')
+  }
 }
 
 export function isMobileDevice(): boolean {

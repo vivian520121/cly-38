@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
-import { Share2, Download, Copy, Check, X, RefreshCw, User, Image } from 'lucide-vue-next'
+import { ref, watch, computed, onUnmounted } from 'vue'
+import { Share2, Download, Copy, Check, X, RefreshCw, User, Image, AlertCircle } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/gameStore'
 import { generatePoster } from '@/utils/poster'
 import {
@@ -20,6 +20,9 @@ import type { SharePlatform } from '@/types'
 
 const gameStore = useGameStore()
 
+const GENERATE_TIMEOUT = 15000
+const SHARE_TIMEOUT = 10000
+
 const isGenerating = ref(false)
 const isSharing = ref(false)
 const posterUrl = ref<string | null>(null)
@@ -27,23 +30,73 @@ const showUserEditor = ref(false)
 const editingNickname = ref('')
 const copySuccess = ref(false)
 const shareSuccess = ref<SharePlatform | null>(null)
+const generateError = ref<string | null>(null)
+const lastGenerateTime = ref(0)
+const MIN_GENERATE_INTERVAL = 1000
+
+let generateTimeoutId: number | null = null
+let shareTimeoutId: number | null = null
 
 const result = computed(() => gameStore.gameResult)
 
+function resetAllStates() {
+  if (generateTimeoutId) {
+    clearTimeout(generateTimeoutId)
+    generateTimeoutId = null
+  }
+  if (shareTimeoutId) {
+    clearTimeout(shareTimeoutId)
+    shareTimeoutId = null
+  }
+  isGenerating.value = false
+  isSharing.value = false
+}
+
+function forceReset() {
+  resetAllStates()
+  posterUrl.value = null
+  generateError.value = null
+  copySuccess.value = false
+  shareSuccess.value = null
+}
+
 watch(() => gameStore.showShareModal, async (show) => {
   if (show && result.value) {
+    forceReset()
     await generatePosterImage()
   } else {
-    posterUrl.value = null
-    copySuccess.value = false
-    shareSuccess.value = null
+    forceReset()
   }
 })
 
-async function generatePosterImage() {
+onUnmounted(() => {
+  forceReset()
+})
+
+async function generatePosterImage(force: boolean = false) {
   if (!result.value) return
 
+  const now = Date.now()
+  if (!force && isGenerating.value) {
+    console.warn('Generate already in progress, skipping')
+    return
+  }
+  if (!force && now - lastGenerateTime.value < MIN_GENERATE_INTERVAL) {
+    console.warn('Generate called too frequently, skipping')
+    return
+  }
+
+  lastGenerateTime.value = now
   isGenerating.value = true
+  generateError.value = null
+
+  generateTimeoutId = window.setTimeout(() => {
+    console.warn('Poster generation timed out')
+    generateError.value = '生成超时，请重试'
+    isGenerating.value = false
+    generateTimeoutId = null
+  }, GENERATE_TIMEOUT)
+
   try {
     const url = await generatePoster({
       userInfo: gameStore.userInfo,
@@ -52,18 +105,30 @@ async function generatePosterImage() {
     })
     posterUrl.value = url
     gameStore.setPosterUrl(url)
+    generateError.value = null
   } catch (error) {
     console.error('Failed to generate poster:', error)
+    generateError.value = error instanceof Error ? error.message : '生成失败，请重试'
   } finally {
+    if (generateTimeoutId) {
+      clearTimeout(generateTimeoutId)
+      generateTimeoutId = null
+    }
     isGenerating.value = false
   }
 }
 
 async function handleShare(platform: SharePlatform) {
-  if (!posterUrl.value || !result.value) return
+  if (!posterUrl.value || !result.value || isSharing.value) return
 
   isSharing.value = true
   shareSuccess.value = null
+
+  shareTimeoutId = window.setTimeout(() => {
+    console.warn('Share operation timed out')
+    isSharing.value = false
+    shareTimeoutId = null
+  }, SHARE_TIMEOUT)
 
   try {
     const shareData = buildShareData(result.value, posterUrl.value)
@@ -99,14 +164,22 @@ async function handleShare(platform: SharePlatform) {
     }
 
     if (isMobileDevice() && platform !== 'download' && platform !== 'copy') {
-      const file = await dataUrlToFile(posterUrl.value, 'puzzle-victory.png')
-      await nativeShare(shareData, [file])
+      try {
+        const file = await dataUrlToFile(posterUrl.value, 'puzzle-victory.png')
+        await nativeShare(shareData, [file])
+      } catch {
+        // Ignore native share errors
+      }
     }
 
     shareSuccess.value = platform
   } catch (error) {
     console.error('Share failed:', error)
   } finally {
+    if (shareTimeoutId) {
+      clearTimeout(shareTimeoutId)
+      shareTimeoutId = null
+    }
     isSharing.value = false
     setTimeout(() => {
       shareSuccess.value = null
@@ -115,6 +188,7 @@ async function handleShare(platform: SharePlatform) {
 }
 
 function openUserEditor() {
+  if (isGenerating.value) return
   editingNickname.value = gameStore.userInfo.nickname
   showUserEditor.value = true
 }
@@ -124,20 +198,26 @@ function saveUserInfo() {
     gameStore.setUserInfo({ nickname: editingNickname.value.trim() })
   }
   showUserEditor.value = false
-  if (result.value) {
-    generatePosterImage()
+  if (result.value && !isGenerating.value) {
+    generatePosterImage(true)
   }
 }
 
 function randomizeAvatar() {
+  if (isGenerating.value) return
   gameStore.randomizeUserInfo()
   if (result.value) {
-    generatePosterImage()
+    generatePosterImage(true)
   }
 }
 
 function close() {
+  forceReset()
   gameStore.closeShareModal()
+}
+
+function handleRegenerate() {
+  generatePosterImage(true)
 }
 </script>
 
@@ -195,11 +275,22 @@ function close() {
                 </div>
               </div>
 
+              <div v-if="generateError" class="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center gap-2">
+                <AlertCircle :size="18" class="text-red-400 flex-shrink-0" />
+                <span class="text-red-400 text-sm">{{ generateError }}</span>
+              </div>
+
               <div class="poster-preview mb-6">
                 <div class="relative bg-white/5 rounded-2xl overflow-hidden border border-white/10 aspect-[3/4]">
                   <div v-if="isGenerating" class="absolute inset-0 flex flex-col items-center justify-center">
                     <div class="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mb-3"></div>
                     <p class="text-white/60 text-sm">正在生成海报...</p>
+                    <button
+                      class="mt-4 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                      @click="forceReset"
+                    >
+                      取消
+                    </button>
                   </div>
                   <img
                     v-else-if="posterUrl"
@@ -212,7 +303,7 @@ function close() {
                     <p>海报生成失败</p>
                     <button
                       class="mt-2 px-4 py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm hover:bg-violet-500/30 transition-colors"
-                      @click="generatePosterImage"
+                      @click="handleRegenerate"
                     >
                       重新生成
                     </button>
@@ -233,10 +324,13 @@ function close() {
                   @click="handleShare(platform.id)"
                 >
                   <div
-                    class="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                    class="w-12 h-12 rounded-full flex items-center justify-center text-2xl relative"
                     :style="{ backgroundColor: platform.color + '30' }"
                   >
-                    <Check v-if="shareSuccess === platform.id" :size="24" class="text-emerald-400" />
+                    <div v-if="isSharing && shareSuccess === null" class="absolute inset-0 flex items-center justify-center">
+                      <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <Check v-else-if="shareSuccess === platform.id" :size="24" class="text-emerald-400" />
                     <span v-else>{{ platform.icon }}</span>
                   </div>
                   <span class="text-white text-xs font-medium">{{ platform.name }}</span>
@@ -249,8 +343,8 @@ function close() {
 
               <div class="flex gap-3">
                 <button
-                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all hover:scale-105"
-                  @click="generatePosterImage"
+                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click="handleRegenerate"
                   :disabled="isGenerating"
                 >
                   <RefreshCw :size="18" :class="{ 'animate-spin': isGenerating }" />
