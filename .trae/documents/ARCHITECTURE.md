@@ -20,14 +20,21 @@ graph TD
 
 ## 2. 技术描述
 
-- **前端框架**: Vue@3.4 + TypeScript + Vite
-- **状态管理**: Pinia@2
-- **样式方案**: TailwindCSS@3 + SCSS
-- **动画库**: @vueuse/motion (Vue组合式动画)
-- **工具库**: @vueuse/core (Vue组合式工具集)
-- **初始化工具**: create-vite
-- **后端**: 无 (纯前端应用)
-- **数据存储**: LocalStorage (保存最佳成绩)
+* **前端框架**: Vue\@3.4 + TypeScript + Vite
+
+* **状态管理**: Pinia\@2
+
+* **样式方案**: TailwindCSS\@3 + SCSS
+
+* **动画库**: @vueuse/motion (Vue组合式动画)
+
+* **工具库**: @vueuse/core (Vue组合式工具集)
+
+* **初始化工具**: create-vite
+
+* **后端**: 无 (纯前端应用)
+
+* **数据存储**: LocalStorage (保存最佳成绩)
 
 ## 3. 目录结构
 
@@ -101,26 +108,39 @@ interface GameResult {
 ## 5. 核心算法
 
 ### 5.1 拼图打乱算法
-- 使用 Fisher-Yates 洗牌算法打乱拼图块
-- 确保打乱后的拼图是可解的（检查逆序数奇偶性）
-- 空白格固定在右下角
+
+* 使用 Fisher-Yates 洗牌算法打乱拼图块
+
+* 确保打乱后的拼图是可解的（检查逆序数奇偶性）
+
+* 空白格固定在右下角
 
 ### 5.2 可解性判定
-- 计算逆序数：统计每个拼图块前面比它大的块数之和
-- 对于N×N的拼图：
-  - N为奇数：逆序数必须为偶数
-  - N为偶数：逆序数 + 空白格所在行（从底部数）必须为奇数
+
+* 计算逆序数：统计每个拼图块前面比它大的块数之和
+
+* 对于N×N的拼图：
+
+  * N为奇数：逆序数必须为偶数
+
+  * N为偶数：逆序数 + 空白格所在行（从底部数）必须为奇数
 
 ### 5.3 移动逻辑
-- 点击拼图块时，检查其上下左右相邻位置
-- 如果相邻位置是空白格，则交换位置
-- 移动后检查是否完成拼图
+
+* 点击拼图块时，检查其上下左右相邻位置
+
+* 如果相邻位置是空白格，则交换位置
+
+* 移动后检查是否完成拼图
 
 ### 5.4 完成判定
-- 遍历所有拼图块，检查 currentIndex === correctIndex
-- 全部满足则判定为完成
+
+* 遍历所有拼图块，检查 currentIndex === correctIndex
+
+* 全部满足则判定为完成
 
 ### 5.5 得分计算
+
 ```
 基础分 = 难度系数 × 1000
 时间惩罚 = 用时秒数 × 2
@@ -132,20 +152,33 @@ interface GameResult {
 ## 6. 状态管理设计
 
 ### gameStore Actions
-- `initGame(difficulty, image)`: 初始化游戏
-- `shufflePuzzle()`: 打乱拼图
-- `movePiece(pieceId)`: 移动拼图块
-- `resetPuzzle()`: 重置到初始打乱状态
-- `restartGame()`: 重新开始当前游戏
-- `changeImage(image)`: 更换图片
-- `changeDifficulty(size)`: 改变难度
-- `checkCompletion()`: 检查是否完成
+
+* `initGame(difficulty, image)`: 初始化游戏
+
+* `shufflePuzzle()`: 打乱拼图
+
+* `movePiece(pieceId)`: 移动拼图块
+
+* `resetPuzzle()`: 重置到初始打乱状态
+
+* `restartGame()`: 重新开始当前游戏
+
+* `changeImage(image)`: 更换图片
+
+* `changeDifficulty(size)`: 改变难度
+
+* `checkCompletion()`: 检查是否完成
 
 ### gameStore Getters
-- `emptyPiece`: 获取空白块
-- `movablePieces`: 获取可移动的拼图块
-- `isSolvable`: 拼图是否可解
-- `formattedTime`: 格式化的时间显示
+
+* `emptyPiece`: 获取空白块
+
+* `movablePieces`: 获取可移动的拼图块
+
+* `isSolvable`: 拼图是否可解
+
+* `formattedTime`: 格式化的时间显示
+
 ```typescript
 // 难度配置
 const DIFFICULTIES: DifficultyConfig[] = [
@@ -154,3 +187,4 @@ const DIFFICULTIES: DifficultyConfig[] = [
   { size: 5, label: '困难 5×5', baseScore: 3500 },
 ];
 ```
+

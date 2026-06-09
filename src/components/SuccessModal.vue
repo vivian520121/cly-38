@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { Star, Clock, Footprints, Trophy, RotateCcw, Shuffle, X } from 'lucide-vue-next'
+import { Star, Clock, Footprints, Trophy, RotateCcw, Shuffle, X, Share2 } from 'lucide-vue-next'
 import { useGameStore } from '@/stores/gameStore'
 import { formatTime } from '@/utils/score'
 
@@ -33,6 +33,13 @@ function handleChangeImage() {
     gameStore.showImageSelector = true
     gameStore.isCompleted = false
     gameStore.gameResult = null
+  }, 300)
+}
+
+function handleShare() {
+  showContent.value = false
+  setTimeout(() => {
+    gameStore.openShareModal()
   }, 300)
 }
 
@@ -128,7 +135,7 @@ function close() {
                 </div>
               </div>
 
-              <div class="flex gap-3">
+              <div class="flex gap-3 mb-3">
                 <button
                   class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all hover:scale-105"
                   @click="handleRestart"
@@ -144,6 +151,13 @@ function close() {
                   换图
                 </button>
               </div>
+              <button
+                class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30 transition-all hover:scale-[1.02]"
+                @click="handleShare"
+              >
+                <Share2 :size="18" />
+                分享战绩
+              </button>
             </div>
           </div>
         </Transition>

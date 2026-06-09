@@ -1,12 +1,52 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { PuzzlePiece, GameResult, GameState } from '@/types'
+import type { PuzzlePiece, GameResult, GameState, UserInfo } from '@/types'
 import { BUILTIN_IMAGES } from '@/types'
 import { createPuzzle, shufflePuzzle, isAdjacent, swapPieces, checkCompletion, getMovablePieces } from '@/utils/puzzle'
 import { calculateScore, formatTime, getBestScore, saveBestScore } from '@/utils/score'
 
 const STORAGE_KEY = 'puzzle_game_state'
+const USER_INFO_KEY = 'puzzle_user_info'
 const MAX_UNDO_STEPS = 3
+
+const DEFAULT_USER_INFO: UserInfo = {
+  nickname: '拼图玩家',
+  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=puzzle'
+}
+
+function loadUserInfo(): UserInfo {
+  try {
+    const saved = localStorage.getItem(USER_INFO_KEY)
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch {
+    // Ignore
+  }
+  return DEFAULT_USER_INFO
+}
+
+function saveUserInfo(info: UserInfo) {
+  try {
+    localStorage.setItem(USER_INFO_KEY, JSON.stringify(info))
+  } catch {
+    // Ignore
+  }
+}
+
+function generateRandomNickname(): string {
+  const adjectives = ['快乐的', '聪明的', '勇敢的', '可爱的', '神秘的', '帅气的', '优雅的', '活力的']
+  const nouns = ['小狐狸', '小熊猫', '小兔子', '小老虎', '小企鹅', '小海豚', '小松鼠', '小猫咪']
+  const adj = adjectives[Math.floor(Math.random() * adjectives.length)]
+  const noun = nouns[Math.floor(Math.random() * nouns.length)]
+  return adj + noun
+}
+
+function generateRandomAvatar(): string {
+  const seeds = ['puzzle', 'game', 'player', 'winner', 'champion', 'master', 'pro', 'legend']
+  const seed = seeds[Math.floor(Math.random() * seeds.length)] + Date.now()
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
+}
 
 interface HistoryState {
   pieces: PuzzlePiece[]
@@ -26,6 +66,10 @@ export const useGameStore = defineStore('game', () => {
   const gameResult = ref<GameResult | null>(null)
   const history = ref<HistoryState[]>([])
   const hintedPieceId = ref<number | null>(null)
+
+  const userInfo = ref<UserInfo>(loadUserInfo())
+  const showShareModal = ref(false)
+  const generatedPosterUrl = ref<string | null>(null)
 
   const emptyPiece = computed(() => pieces.value.find(p => p.isEmpty)!)
   const movablePieceIds = computed(() => getMovablePieces(pieces.value).map(p => p.id))
@@ -228,6 +272,31 @@ export const useGameStore = defineStore('game', () => {
     return hintedPieceId.value === pieceId
   }
 
+  function setUserInfo(info: Partial<UserInfo>) {
+    userInfo.value = { ...userInfo.value, ...info }
+    saveUserInfo(userInfo.value)
+  }
+
+  function randomizeUserInfo() {
+    userInfo.value = {
+      nickname: generateRandomNickname(),
+      avatar: generateRandomAvatar()
+    }
+    saveUserInfo(userInfo.value)
+  }
+
+  function openShareModal() {
+    showShareModal.value = true
+  }
+
+  function closeShareModal() {
+    showShareModal.value = false
+  }
+
+  function setPosterUrl(url: string | null) {
+    generatedPosterUrl.value = url
+  }
+
   return {
     difficulty,
     pieces,
@@ -244,6 +313,9 @@ export const useGameStore = defineStore('game', () => {
     bestScore,
     canUndo,
     hintedPieceId,
+    userInfo,
+    showShareModal,
+    generatedPosterUrl,
     initGame,
     startGame,
     shuffle,
@@ -258,6 +330,11 @@ export const useGameStore = defineStore('game', () => {
     showHint,
     isHinted,
     loadFromStorage,
-    saveToStorage
+    saveToStorage,
+    setUserInfo,
+    randomizeUserInfo,
+    openShareModal,
+    closeShareModal,
+    setPosterUrl
   }
 })

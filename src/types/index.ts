@@ -43,6 +43,43 @@ export interface BuiltinImage {
   thumb: string
 }
 
+export interface UserInfo {
+  nickname: string
+  avatar: string
+}
+
+export interface HonorBadge {
+  id: string
+  name: string
+  icon: string
+  color: string
+  condition: string
+}
+
+export interface PosterConfig {
+  width: number
+  height: number
+  backgroundColor: string
+  gradientColors: string[]
+}
+
+export type SharePlatform = 'wechat' | 'weibo' | 'qq' | 'download' | 'copy'
+
+export interface ShareData {
+  title: string
+  description: string
+  imageUrl: string
+  url: string
+}
+
+export const HONOR_BADGES: HonorBadge[] = [
+  { id: 'speed_demon', name: '闪电手', icon: '⚡', color: '#f59e0b', condition: '60秒内完成' },
+  { id: 'perfect', name: '完美主义', icon: '💎', color: '#8b5cf6', condition: '无提示完成' },
+  { id: 'master', name: '拼图大师', icon: '👑', color: '#ec4899', condition: '5×5难度完成' },
+  { id: 'efficient', name: '高效玩家', icon: '🎯', color: '#10b981', condition: '最少步数完成' },
+  { id: 'persistent', name: '永不放弃', icon: '🔥', color: '#ef4444', condition: '连续完成3次' },
+]
+
 export const DIFFICULTIES: DifficultyConfig[] = [
   { size: 3, label: '简单 3×3', baseScore: 1000 },
   { size: 4, label: '中等 4×4', baseScore: 2000 },
