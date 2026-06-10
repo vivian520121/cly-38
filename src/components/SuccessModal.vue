@@ -8,6 +8,23 @@ const gameStore = useGameStore()
 
 const showContent = ref(false)
 
+function getCssVar(name: string, fallback: string = ''): string {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback
+  }
+  return fallback
+}
+
+function handleMouseEnter(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleMouseLeave(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
 const result = computed(() => gameStore.gameResult)
 
 watch(() => gameStore.isCompleted, (completed) => {
@@ -66,7 +83,7 @@ function close() {
               top: `${Math.random() * 100}%`,
               width: `${Math.random() * 10 + 5}px`,
               height: `${Math.random() * 10 + 5}px`,
-              backgroundColor: ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'][Math.floor(Math.random() * 5)],
+              backgroundColor: [getCssVar('--accent-gradient-1', '#8b5cf6'), getCssVar('--accent-gradient-2', '#ec4899'), '#f59e0b', '#10b981', '#3b82f6'][Math.floor(Math.random() * 5)],
               animationDelay: `${Math.random() * 2}s`,
               animationDuration: `${Math.random() * 2 + 2}s`
             }"
@@ -76,26 +93,48 @@ function close() {
         <Transition name="success-content">
           <div v-if="showContent" class="success-content relative w-full max-w-md">
             <button
-              class="absolute -top-2 -right-2 z-10 w-10 h-10 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110"
+              class="absolute -top-2 -right-2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              :style="{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-muted)'
+              }"
+              @mouseenter="handleMouseEnter($event, 'color', 'var(--text-primary)')"
+              @mouseleave="handleMouseLeave($event, 'color', 'var(--text-muted)')"
               @click="close"
             >
               <X :size="18" />
             </button>
 
-            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 border border-white/10 shadow-2xl text-center relative overflow-hidden">
-              <div class="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-fuchsia-500/10 pointer-events-none">
+            <div class="rounded-3xl p-8 shadow-2xl text-center relative overflow-hidden"
+              :style="{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-default)'
+              }"
+            >
+              <div class="absolute inset-0 pointer-events-none"
+                :style="{
+                  background: 'linear-gradient(135deg, var(--accent-gradient-1) 0%, transparent 50%, var(--accent-gradient-2) 100%)',
+                  opacity: 0.1
+                }"
+              >
               </div>
 
               <div class="trophy-wrapper mb-6">
-                <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                  <Trophy :size="48" class="text-white" />
+                <div class="w-24 h-24 mx-auto rounded-full flex items-center justify-center shadow-lg"
+                  :style="{
+                    background: 'linear-gradient(135deg, var(--accent-gradient-1), var(--accent-gradient-2))',
+                    boxShadow: '0 10px 40px var(--glow-primary)'
+                  }"
+                >
+                  <Trophy :size="48" :style="{ color: 'var(--text-primary)' }" />
                 </div>
               </div>
 
-              <h2 class="text-3xl font-bold text-white mb-2">
+              <h2 class="text-3xl font-bold mb-2" :style="{ color: 'var(--text-primary)' }">
                 🎉 恭喜完成！
               </h2>
-              <p class="text-white/60 mb-6">你成功还原了拼图</p>
+              <p class="mb-6" :style="{ color: 'var(--text-muted)' }">你成功还原了拼图</p>
 
               <div class="stars-container flex justify-center gap-2 mb-6">
                 <Star
@@ -103,48 +142,64 @@ function close() {
                   :key="i"
                   class="star-icon transition-all duration-500"
                   :class="{
-                    'star-filled text-amber-400': i <= (result?.stars ?? 0),
-                    'text-white/20': i > (result?.stars ?? 0)
+                    'star-filled': i <= (result?.stars ?? 0)
                   }"
                   :size="36"
-                  :style="{ animationDelay: `${i * 0.2}s`, fill: i <= (result?.stars ?? 0) ? 'currentColor' : 'none' }"
+                  :style="{
+                    animationDelay: `${i * 0.2}s`,
+                    fill: i <= (result?.stars ?? 0) ? 'currentColor' : 'none',
+                    color: i <= (result?.stars ?? 0) ? 'var(--accent-gradient-1)' : 'var(--text-muted)',
+                    opacity: i <= (result?.stars ?? 0) ? 1 : 0.2
+                  }"
                 />
               </div>
 
               <div class="grid grid-cols-3 gap-3 mb-6">
-                <div class="stat-item bg-white/5 rounded-xl p-3">
-                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                    <Footprints :size="16" class="text-blue-400" />
+                <div class="stat-item rounded-xl p-3" :style="{ backgroundColor: 'var(--bg-secondary)' }">
+                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center" :style="{ backgroundColor: 'color-mix(in srgb, var(--accent-gradient-1) 20%, transparent)' }">
+                    <Footprints :size="16" :style="{ color: 'var(--accent-gradient-1)' }" />
                   </div>
-                  <div class="text-2xl font-bold text-white">{{ result?.moves }}</div>
-                  <div class="text-xs text-white/50">步数</div>
+                  <div class="text-2xl font-bold" :style="{ color: 'var(--text-primary)' }">{{ result?.moves }}</div>
+                  <div class="text-xs" :style="{ color: 'var(--text-muted)' }">步数</div>
                 </div>
-                <div class="stat-item bg-white/5 rounded-xl p-3">
-                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                    <Clock :size="16" class="text-emerald-400" />
+                <div class="stat-item rounded-xl p-3" :style="{ backgroundColor: 'var(--bg-secondary)' }">
+                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center" :style="{ backgroundColor: 'color-mix(in srgb, var(--accent-gradient-2) 20%, transparent)' }">
+                    <Clock :size="16" :style="{ color: 'var(--accent-gradient-2)' }" />
                   </div>
-                  <div class="text-2xl font-bold text-white font-mono">{{ result ? formatTime(result.time) : '00:00' }}</div>
-                  <div class="text-xs text-white/50">用时</div>
+                  <div class="text-2xl font-bold font-mono" :style="{ color: 'var(--text-primary)' }">{{ result ? formatTime(result.time) : '00:00' }}</div>
+                  <div class="text-xs" :style="{ color: 'var(--text-muted)' }">用时</div>
                 </div>
-                <div class="stat-item bg-white/5 rounded-xl p-3">
-                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg bg-fuchsia-500/20 flex items-center justify-center">
-                    <Trophy :size="16" class="text-fuchsia-400" />
+                <div class="stat-item rounded-xl p-3" :style="{ backgroundColor: 'var(--bg-secondary)' }">
+                  <div class="w-8 h-8 mx-auto mb-2 rounded-lg flex items-center justify-center" :style="{ backgroundColor: 'color-mix(in srgb, var(--accent-gradient-1) 20%, transparent)' }">
+                    <Trophy :size="16" :style="{ color: 'var(--accent-gradient-1)' }" />
                   </div>
-                  <div class="text-2xl font-bold text-white">{{ result?.score }}</div>
-                  <div class="text-xs text-white/50">得分</div>
+                  <div class="text-2xl font-bold" :style="{ color: 'var(--text-primary)' }">{{ result?.score }}</div>
+                  <div class="text-xs" :style="{ color: 'var(--text-muted)' }">得分</div>
                 </div>
               </div>
 
               <div class="flex gap-3 mb-3">
                 <button
-                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all hover:scale-105"
+                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium transition-all hover:scale-105"
+                  :style="{
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-default)'
+                  }"
+                  @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--bg-secondary) 80%, var(--text-primary))')"
+                  @mouseleave="handleMouseLeave($event, 'backgroundColor', 'var(--bg-secondary)')"
                   @click="handleRestart"
                 >
                   <RotateCcw :size="18" />
                   再来一局
                 </button>
                 <button
-                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/30 transition-all hover:scale-105"
+                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium shadow-lg transition-all hover:scale-105"
+                  :style="{
+                    background: 'linear-gradient(to right, var(--accent-gradient-1), var(--accent-gradient-2))',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 10px 30px var(--glow-primary)'
+                  }"
                   @click="handleChangeImage"
                 >
                   <Shuffle :size="18" />
@@ -152,7 +207,12 @@ function close() {
                 </button>
               </div>
               <button
-                class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30 transition-all hover:scale-[1.02]"
+                class="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium shadow-lg transition-all hover:scale-[1.02]"
+                :style="{
+                  background: 'linear-gradient(to right, var(--accent-gradient-1), var(--accent-gradient-2))',
+                  color: 'var(--text-primary)',
+                  boxShadow: '0 10px 30px var(--glow-secondary)'
+                }"
                 @click="handleShare"
               >
                 <Share2 :size="18" />

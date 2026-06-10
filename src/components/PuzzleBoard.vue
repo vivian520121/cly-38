@@ -42,8 +42,9 @@ onUnmounted(() => {
       ref="boardRef"
       class="puzzle-board relative w-full aspect-square rounded-2xl overflow-hidden"
       :class="{ 'board-glow': gameStore.isCompleted }"
+      style="background: var(--card-bg);"
     >
-      <div class="absolute inset-0 bg-slate-800/50 backdrop-blur-sm">
+      <div class="absolute inset-0 backdrop-blur-sm" style="background: var(--bg-secondary); opacity: 0.5;">
       </div>
       <div class="absolute inset-2 rounded-xl overflow-hidden">
         <PuzzlePiece
@@ -64,8 +65,9 @@ onUnmounted(() => {
 }
 
 .puzzle-board {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-default);
   transform-style: preserve-3d;
+  border: 1px solid var(--border-default);
 }
 
 .board-glow {
@@ -74,10 +76,10 @@ onUnmounted(() => {
 
 @keyframes boardGlow {
   0%, 100% {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), 0 0 40px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-default), 0 0 40px var(--glow-primary);
   }
   50% {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0 60px rgba(236, 72, 153, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border-hover), 0 0 60px var(--glow-secondary);
   }
 }
 </style>

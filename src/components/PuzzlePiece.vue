@@ -84,7 +84,7 @@ function handleClick() {
 <style scoped>
 .puzzle-piece {
   transition: left 0.2s ease-out, top 0.2s ease-out, transform 0.15s ease;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid var(--border-hover);
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   overflow: hidden;
@@ -98,7 +98,8 @@ function handleClick() {
 .puzzle-piece-movable:hover {
   transform: scale(1.02);
   z-index: 10;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3), 0 0 20px var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.2);
+  border-color: var(--accent-primary);
 }
 
 .puzzle-piece-movable:active {
@@ -149,7 +150,8 @@ function handleClick() {
 
 .puzzle-empty {
   animation: emptyPulse 2s ease-in-out infinite;
-  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border: 2px dashed var(--border-default);
+  background: var(--card-bg);
 }
 
 @keyframes emptyPulse {
@@ -160,21 +162,21 @@ function handleClick() {
 .puzzle-piece-auto-moving {
   z-index: 30;
   animation: autoMoveGlow 0.5s ease-in-out;
-  border: 3px solid #8b5cf6;
-  box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.2);
+  border: 3px solid var(--accent-primary);
+  box-shadow: 0 0 30px var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes autoMoveGlow {
   0% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 20px var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.2);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 40px rgba(139, 92, 246, 1), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 40px var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.2);
     transform: scale(1.05);
   }
   100% {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 20px var(--glow-primary), inset 0 0 20px rgba(0, 0, 0, 0.2);
     transform: scale(1);
   }
 }

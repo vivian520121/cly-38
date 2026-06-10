@@ -20,7 +20,7 @@ function selectDifficulty(size: 3 | 4 | 5) {
 
 <template>
   <div class="difficulty-selector">
-    <span class="text-sm text-white/60 mb-2 block">选择难度</span>
+    <span class="text-sm text-[var(--text-muted)] mb-2 block">选择难度</span>
     <div class="flex gap-2">
       <button
         v-for="diff in DIFFICULTIES"
@@ -41,12 +41,22 @@ function selectDifficulty(size: 3 | 4 | 5) {
 
 <style scoped>
 .difficulty-btn-active {
-  @apply bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30;
+  background: linear-gradient(135deg, var(--accent-gradient-1) 0%, var(--accent-gradient-2) 100%);
+  color: white;
+  box-shadow: 0 10px 25px var(--glow-primary);
   transform: scale(1.05);
 }
 
 .difficulty-btn-inactive {
-  @apply bg-white/5 text-white/70 border border-white/10 hover:bg-white/10 hover:text-white;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.difficulty-btn-inactive:hover {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
 }
 
 .difficulty-btn {

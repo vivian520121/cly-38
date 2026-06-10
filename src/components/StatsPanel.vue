@@ -15,7 +15,7 @@ const difficultyLabel = computed(() => {
 <template>
   <div class="stats-panel grid grid-cols-2 md:grid-cols-4 gap-3">
     <div class="stat-card">
-      <div class="stat-icon-wrapper bg-blue-500/20 text-blue-400">
+      <div class="stat-icon-wrapper" style="background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary);">
         <Footprints :size="20" />
       </div>
       <div class="stat-content">
@@ -25,7 +25,7 @@ const difficultyLabel = computed(() => {
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon-wrapper bg-emerald-500/20 text-emerald-400">
+      <div class="stat-icon-wrapper" style="background: color-mix(in srgb, var(--accent-secondary) 20%, transparent); color: var(--accent-secondary);">
         <Clock :size="20" />
       </div>
       <div class="stat-content">
@@ -35,7 +35,7 @@ const difficultyLabel = computed(() => {
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon-wrapper bg-amber-500/20 text-amber-400">
+      <div class="stat-icon-wrapper" style="background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary);">
         <Target :size="20" />
       </div>
       <div class="stat-content">
@@ -45,7 +45,7 @@ const difficultyLabel = computed(() => {
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon-wrapper bg-fuchsia-500/20 text-fuchsia-400">
+      <div class="stat-icon-wrapper" style="background: color-mix(in srgb, var(--accent-secondary) 20%, transparent); color: var(--accent-secondary);">
         <Trophy :size="20" />
       </div>
       <div class="stat-content">
@@ -58,30 +58,47 @@ const difficultyLabel = computed(() => {
 
 <style scoped>
 .stat-card {
-  @apply flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--card-bg);
+  backdrop-filter: var(--card-blur);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-default);
   transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  @apply bg-white/10 border-white/20;
+  background: color-mix(in srgb, var(--card-bg) 100%, white 10%);
+  border-color: var(--border-hover);
   transform: translateY(-2px);
 }
 
 .stat-icon-wrapper {
-  @apply w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .stat-content {
-  @apply flex flex-col;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-label {
-  @apply text-xs text-white/60;
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 .stat-value {
-  @apply text-lg font-bold text-white;
-  background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  font-size: 1.125rem;
+  font-weight: bold;
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

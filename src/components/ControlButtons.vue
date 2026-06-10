@@ -144,38 +144,49 @@ function handleStopAutoSolve() {
 }
 
 .control-btn-primary {
-  @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30;
+  background: linear-gradient(135deg, var(--accent-gradient-1) 0%, var(--accent-gradient-2) 100%);
+  color: white;
+  box-shadow: 0 10px 25px var(--glow-primary);
 }
 
 .control-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 15px 35px var(--glow-primary);
 }
 
 .control-btn-secondary {
-  @apply bg-white/10 text-white border border-white/20 hover:bg-white/20;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
 }
 
 .control-btn-secondary:hover {
+  background: var(--accent-primary);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
   transform: translateY(-2px);
 }
 
 .control-btn-accent {
-  @apply bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/30;
+  background: linear-gradient(135deg, var(--accent-gradient-2) 0%, var(--accent-gradient-1) 100%);
+  color: white;
+  box-shadow: 0 10px 25px var(--glow-secondary);
 }
 
 .control-btn-accent:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 15px 35px var(--glow-secondary);
 }
 
 .control-btn-hint {
-  @apply bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/30;
+  background: linear-gradient(135deg, var(--accent-gradient-1) 0%, var(--accent-gradient-2) 100%);
+  color: white;
+  box-shadow: 0 10px 25px var(--glow-primary);
 }
 
 .control-btn-hint:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 15px 35px var(--glow-primary);
 }
 
 .control-btn:active {
@@ -183,20 +194,24 @@ function handleStopAutoSolve() {
 }
 
 .control-btn-auto {
-  @apply bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30;
+  background: linear-gradient(135deg, var(--accent-gradient-1) 0%, var(--accent-gradient-2) 100%);
+  color: white;
+  box-shadow: 0 10px 25px var(--glow-primary);
 }
 
 .control-btn-auto:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 15px 35px var(--glow-primary);
 }
 
 .control-btn-danger {
-  @apply bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/30;
+  background: linear-gradient(135deg, #ef4444 0%, #f43f5e 100%);
+  color: white;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
 }
 
 .control-btn-danger:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
 }
 </style>

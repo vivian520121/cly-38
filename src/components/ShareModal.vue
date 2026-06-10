@@ -39,6 +39,36 @@ let shareTimeoutId: number | null = null
 
 const result = computed(() => gameStore.gameResult)
 
+function handleMouseEnter(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleMouseLeave(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleMouseEnterCurrent(e: Event, property: string, value: string) {
+  const target = e.currentTarget as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleMouseLeaveCurrent(e: Event, property: string, value: string) {
+  const target = e.currentTarget as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleFocus(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
+function handleBlur(e: Event, property: string, value: string) {
+  const target = e.target as HTMLElement
+  target.style[property as any] = value
+}
+
 function resetAllStates() {
   if (generateTimeoutId) {
     clearTimeout(generateTimeoutId)
@@ -228,35 +258,63 @@ function handleRegenerate() {
         <Transition name="share-content">
           <div v-if="gameStore.showShareModal" class="share-content relative w-full max-w-lg">
             <button
-              class="absolute -top-2 -right-2 z-10 w-10 h-10 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110"
+              class="absolute -top-2 -right-2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110"
+              :style="{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-muted)'
+              }"
+              @mouseenter="handleMouseEnter($event, 'color', 'var(--text-primary)')"
+              @mouseleave="handleMouseLeave($event, 'color', 'var(--text-muted)')"
               @click="close"
             >
               <X :size="18" />
             </button>
 
-            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 border border-white/10 shadow-2xl relative overflow-hidden">
-              <div class="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-fuchsia-500/10 pointer-events-none"></div>
+            <div class="rounded-3xl p-6 shadow-2xl relative overflow-hidden"
+              :style="{
+                background: 'var(--card-bg)',
+                border: '1px solid var(--border-default)'
+              }"
+            >
+              <div class="absolute inset-0 pointer-events-none"
+                :style="{
+                  background: 'linear-gradient(135deg, var(--accent-gradient-1) 0%, transparent 50%, var(--accent-gradient-2) 100%)',
+                  opacity: 0.1
+                }"
+              ></div>
 
               <div class="flex items-center gap-3 mb-6">
-                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-                  <Share2 :size="24" class="text-white" />
+                <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                  :style="{ background: 'linear-gradient(135deg, var(--accent-gradient-1), var(--accent-gradient-2))' }"
+                >
+                  <Share2 :size="24" :style="{ color: 'var(--text-primary)' }" />
                 </div>
                 <div>
-                  <h2 class="text-2xl font-bold text-white">分享战绩</h2>
-                  <p class="text-white/60 text-sm">生成专属海报，秀出你的实力</p>
+                  <h2 class="text-2xl font-bold" :style="{ color: 'var(--text-primary)' }">分享战绩</h2>
+                  <p class="text-sm" :style="{ color: 'var(--text-muted)' }">生成专属海报，秀出你的实力</p>
                 </div>
               </div>
 
-              <div class="flex items-center gap-3 mb-6 p-3 bg-white/5 rounded-xl border border-white/10">
+              <div class="flex items-center gap-3 mb-6 p-3 rounded-xl"
+                :style="{
+                  backgroundColor: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-default)'
+                }"
+              >
                 <div class="relative">
                   <img
                     :src="gameStore.userInfo.avatar"
                     :alt="gameStore.userInfo.nickname"
-                    class="w-14 h-14 rounded-full border-2 border-white/30"
+                    class="w-14 h-14 rounded-full"
+                    :style="{ border: '2px solid var(--border-default)' }"
                     @error="e => (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>'"
                   />
                   <button
-                    class="absolute -bottom-1 -right-1 w-6 h-6 bg-violet-500 rounded-full flex items-center justify-center text-white hover:bg-violet-600 transition-colors"
+                    class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                    :style="{ backgroundColor: 'var(--accent-gradient-1)', color: 'var(--text-primary)' }"
+                    @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--accent-gradient-1) 80%, black)')"
+                    @mouseleave="handleMouseLeave($event, 'backgroundColor', 'var(--accent-gradient-1)')"
                     @click="randomizeAvatar"
                     title="换一个头像"
                   >
@@ -264,9 +322,12 @@ function handleRegenerate() {
                   </button>
                 </div>
                 <div class="flex-1">
-                  <div class="text-white font-medium">{{ gameStore.userInfo.nickname }}</div>
+                  <div class="font-medium" :style="{ color: 'var(--text-primary)' }">{{ gameStore.userInfo.nickname }}</div>
                   <button
-                    class="text-violet-400 text-sm hover:text-violet-300 transition-colors flex items-center gap-1"
+                    class="text-sm transition-colors flex items-center gap-1"
+                    :style="{ color: 'var(--accent-gradient-1)' }"
+                    @mouseenter="handleMouseEnter($event, 'color', 'color-mix(in srgb, var(--accent-gradient-1) 80%, white)')"
+                    @mouseleave="handleMouseLeave($event, 'color', 'var(--accent-gradient-1)')"
                     @click="openUserEditor"
                   >
                     <User :size="14" />
@@ -275,18 +336,37 @@ function handleRegenerate() {
                 </div>
               </div>
 
-              <div v-if="generateError" class="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-xl flex items-center gap-2">
-                <AlertCircle :size="18" class="text-red-400 flex-shrink-0" />
-                <span class="text-red-400 text-sm">{{ generateError }}</span>
+              <div v-if="generateError" class="mb-4 p-3 rounded-xl flex items-center gap-2"
+                :style="{
+                  backgroundColor: 'color-mix(in srgb, #ef4444 20%, transparent)',
+                  border: '1px solid color-mix(in srgb, #ef4444 30%, transparent)'
+                }"
+              >
+                <AlertCircle :size="18" class="flex-shrink-0" :style="{ color: '#f87171' }" />
+                <span class="text-sm" :style="{ color: '#f87171' }">{{ generateError }}</span>
               </div>
 
               <div class="poster-preview mb-6">
-                <div class="relative bg-white/5 rounded-2xl overflow-hidden border border-white/10 aspect-[3/4]">
+                <div class="relative rounded-2xl overflow-hidden aspect-[3/4]"
+                  :style="{
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-default)',
+                    boxShadow: '0 0 60px var(--glow-primary)'
+                  }"
+                >
                   <div v-if="isGenerating" class="absolute inset-0 flex flex-col items-center justify-center">
-                    <div class="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p class="text-white/60 text-sm">正在生成海报...</p>
+                    <div class="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin mb-3"
+                      :style="{ borderColor: 'var(--accent-gradient-1)', borderTopColor: 'transparent' }"
+                    ></div>
+                    <p class="text-sm" :style="{ color: 'var(--text-muted)' }">正在生成海报...</p>
                     <button
-                      class="mt-4 px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                      class="mt-4 px-4 py-2 rounded-lg text-sm transition-colors"
+                      :style="{
+                        backgroundColor: 'color-mix(in srgb, #ef4444 20%, transparent)',
+                        color: '#f87171'
+                      }"
+                      @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, #ef4444 30%, transparent)')"
+                      @mouseleave="handleMouseLeave($event, 'backgroundColor', 'color-mix(in srgb, #ef4444 20%, transparent)')"
                       @click="forceReset"
                     >
                       取消
@@ -298,11 +378,17 @@ function handleRegenerate() {
                     alt="分享海报"
                     class="w-full h-full object-contain"
                   />
-                  <div v-else class="absolute inset-0 flex flex-col items-center justify-center text-white/40">
+                  <div v-else class="absolute inset-0 flex flex-col items-center justify-center" :style="{ color: 'var(--text-muted)', opacity: 0.4 }">
                     <Image :size="48" class="mb-2" />
                     <p>海报生成失败</p>
                     <button
-                      class="mt-2 px-4 py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm hover:bg-violet-500/30 transition-colors"
+                      class="mt-2 px-4 py-2 rounded-lg text-sm transition-colors"
+                      :style="{
+                        backgroundColor: 'color-mix(in srgb, var(--accent-gradient-1) 20%, transparent)',
+                        color: 'var(--accent-gradient-1)'
+                      }"
+                      @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--accent-gradient-1) 30%, transparent)')"
+                      @mouseleave="handleMouseLeave($event, 'backgroundColor', 'color-mix(in srgb, var(--accent-gradient-1) 20%, transparent)')"
                       @click="handleRegenerate"
                     >
                       重新生成
@@ -316,10 +402,15 @@ function handleRegenerate() {
                   v-for="platform in PLATFORM_CONFIGS"
                   :key="platform.id"
                   class="platform-btn flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  :class="{
-                    'bg-white/10 border border-white/20 hover:bg-white/20': shareSuccess !== platform.id,
-                    'bg-emerald-500/30 border border-emerald-500/50': shareSuccess === platform.id
+                  :style="shareSuccess === platform.id ? {
+                    backgroundColor: 'color-mix(in srgb, #10b981 30%, transparent)',
+                    border: '1px solid color-mix(in srgb, #10b981 50%, transparent)'
+                  } : {
+                    backgroundColor: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-default)'
                   }"
+                  @mouseenter="shareSuccess !== platform.id && handleMouseEnterCurrent($event, 'backgroundColor', 'color-mix(in srgb, var(--bg-secondary) 80%, var(--text-primary))')"
+                  @mouseleave="shareSuccess !== platform.id && handleMouseLeaveCurrent($event, 'backgroundColor', 'var(--bg-secondary)')"
                   :disabled="isGenerating || isSharing || !posterUrl"
                   @click="handleShare(platform.id)"
                 >
@@ -328,22 +419,29 @@ function handleRegenerate() {
                     :style="{ backgroundColor: platform.color + '30' }"
                   >
                     <div v-if="isSharing && shareSuccess === null" class="absolute inset-0 flex items-center justify-center">
-                      <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <div class="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" :style="{ borderColor: 'var(--text-primary)', borderTopColor: 'transparent' }"></div>
                     </div>
-                    <Check v-else-if="shareSuccess === platform.id" :size="24" class="text-emerald-400" />
+                    <Check v-else-if="shareSuccess === platform.id" :size="24" :style="{ color: '#34d399' }" />
                     <span v-else>{{ platform.icon }}</span>
                   </div>
-                  <span class="text-white text-xs font-medium">{{ platform.name }}</span>
+                  <span class="text-xs font-medium" :style="{ color: 'var(--text-primary)' }">{{ platform.name }}</span>
                 </button>
               </div>
 
-              <div v-if="copySuccess" class="text-center text-emerald-400 text-sm mb-4 animate-pulse">
+              <div v-if="copySuccess" class="text-center text-sm mb-4 animate-pulse" :style="{ color: '#34d399' }">
                 ✓ 已复制到剪贴板
               </div>
 
               <div class="flex gap-3">
                 <button
-                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  :style="{
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-default)'
+                  }"
+                  @mouseenter="!isGenerating && handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--bg-secondary) 80%, var(--text-primary))')"
+                  @mouseleave="!isGenerating && handleMouseLeave($event, 'backgroundColor', 'var(--bg-secondary)')"
                   @click="handleRegenerate"
                   :disabled="isGenerating"
                 >
@@ -351,7 +449,12 @@ function handleRegenerate() {
                   重新生成
                 </button>
                 <button
-                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30 transition-all hover:scale-105"
+                  class="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium shadow-lg transition-all hover:scale-105"
+                  :style="{
+                    background: 'linear-gradient(to right, var(--accent-gradient-1), var(--accent-gradient-2))',
+                    color: 'var(--text-primary)',
+                    boxShadow: '0 10px 30px var(--glow-primary)'
+                  }"
                   @click="close"
                 >
                   完成
@@ -363,26 +466,50 @@ function handleRegenerate() {
 
         <Transition name="user-editor">
           <div v-if="showUserEditor" class="absolute inset-0 flex items-center justify-center bg-black/60 z-20">
-            <div class="bg-slate-800 rounded-2xl p-6 w-full max-w-sm mx-4 border border-white/10">
-              <h3 class="text-xl font-bold text-white mb-4">编辑昵称</h3>
+            <div class="rounded-2xl p-6 w-full max-w-sm mx-4"
+              :style="{
+                backgroundColor: 'var(--card-bg)',
+                border: '1px solid var(--border-default)'
+              }"
+            >
+              <h3 class="text-xl font-bold mb-4" :style="{ color: 'var(--text-primary)' }">编辑昵称</h3>
               <input
                 v-model="editingNickname"
                 type="text"
                 maxlength="12"
-                class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-violet-500 transition-colors"
+                class="w-full px-4 py-3 rounded-xl focus:outline-none transition-colors"
+                :style="{
+                  backgroundColor: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-default)',
+                  color: 'var(--text-primary)'
+                }"
                 placeholder="请输入昵称"
+                @focus="handleFocus($event, 'borderColor', 'var(--accent-gradient-1)')"
+                @blur="handleBlur($event, 'borderColor', 'var(--border-default)')"
                 @keyup.enter="saveUserInfo"
               />
-              <p class="text-white/40 text-xs mt-2">最多12个字符</p>
+              <p class="text-xs mt-2" :style="{ color: 'var(--text-muted)', opacity: 0.4 }">最多12个字符</p>
               <div class="flex gap-3 mt-6">
                 <button
-                  class="flex-1 px-4 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                  class="flex-1 px-4 py-3 rounded-xl transition-colors"
+                  :style="{
+                    backgroundColor: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)'
+                  }"
+                  @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--bg-secondary) 80%, var(--text-primary))')"
+                  @mouseleave="handleMouseLeave($event, 'backgroundColor', 'var(--bg-secondary)')"
                   @click="showUserEditor = false"
                 >
                   取消
                 </button>
                 <button
-                  class="flex-1 px-4 py-3 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-colors"
+                  class="flex-1 px-4 py-3 rounded-xl transition-colors"
+                  :style="{
+                    backgroundColor: 'var(--accent-gradient-1)',
+                    color: 'var(--text-primary)'
+                  }"
+                  @mouseenter="handleMouseEnter($event, 'backgroundColor', 'color-mix(in srgb, var(--accent-gradient-1) 80%, black)')"
+                  @mouseleave="handleMouseLeave($event, 'backgroundColor', 'var(--accent-gradient-1)')"
                   @click="saveUserInfo"
                 >
                   保存
@@ -445,6 +572,6 @@ function handleRegenerate() {
 }
 
 .poster-preview {
-  box-shadow: 0 0 60px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 60px var(--glow-primary);
 }
 </style>

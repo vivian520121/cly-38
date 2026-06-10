@@ -86,6 +86,186 @@ export const DIFFICULTIES: DifficultyConfig[] = [
   { size: 5, label: '困难 5×5', baseScore: 3500 },
 ]
 
+export interface ThemeConfig {
+  id: string
+  name: string
+  description: string
+  colors: {
+    background: {
+      primary: string
+      secondary: string
+      gradientStart: string
+      gradientEnd: string
+    }
+    accent: {
+      primary: string
+      secondary: string
+      gradient: string[]
+    }
+    text: {
+      primary: string
+      secondary: string
+      muted: string
+    }
+    border: {
+      default: string
+      hover: string
+    }
+    glow: {
+      primary: string
+      secondary: string
+    }
+    card: {
+      background: string
+      backdropBlur: string
+    }
+  }
+}
+
+export const THEMES: ThemeConfig[] = [
+  {
+    id: 'neon-space',
+    name: '霓虹深空',
+    description: '深邃宇宙中的霓虹光芒',
+    colors: {
+      background: {
+        primary: '#0f172a',
+        secondary: '#1e1b4b',
+        gradientStart: '#0f172a',
+        gradientEnd: '#1e1b4b'
+      },
+      accent: {
+        primary: '#8b5cf6',
+        secondary: '#ec4899',
+        gradient: ['#8b5cf6', '#ec4899']
+      },
+      text: {
+        primary: '#ffffff',
+        secondary: 'rgba(255, 255, 255, 0.7)',
+        muted: 'rgba(255, 255, 255, 0.5)'
+      },
+      border: {
+        default: 'rgba(255, 255, 255, 0.1)',
+        hover: 'rgba(255, 255, 255, 0.2)'
+      },
+      glow: {
+        primary: 'rgba(139, 92, 246, 0.5)',
+        secondary: 'rgba(236, 72, 153, 0.5)'
+      },
+      card: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropBlur: 'blur-sm'
+      }
+    }
+  },
+  {
+    id: 'minimal-matte',
+    name: '极简哑光黑',
+    description: '低调优雅的深色哑光质感',
+    colors: {
+      background: {
+        primary: '#18181b',
+        secondary: '#27272a',
+        gradientStart: '#18181b',
+        gradientEnd: '#27272a'
+      },
+      accent: {
+        primary: '#a1a1aa',
+        secondary: '#71717a',
+        gradient: ['#a1a1aa', '#71717a']
+      },
+      text: {
+        primary: '#fafafa',
+        secondary: 'rgba(250, 250, 250, 0.7)',
+        muted: 'rgba(250, 250, 250, 0.5)'
+      },
+      border: {
+        default: 'rgba(255, 255, 255, 0.08)',
+        hover: 'rgba(255, 255, 255, 0.15)'
+      },
+      glow: {
+        primary: 'rgba(161, 161, 170, 0.3)',
+        secondary: 'rgba(113, 113, 122, 0.3)'
+      },
+      card: {
+        background: 'rgba(39, 39, 42, 0.6)',
+        backdropBlur: 'blur-md'
+      }
+    }
+  },
+  {
+    id: 'warm-sunset',
+    name: '暖日落柔光',
+    description: '温暖柔和的日落余晖',
+    colors: {
+      background: {
+        primary: '#2c1810',
+        secondary: '#451a03',
+        gradientStart: '#2c1810',
+        gradientEnd: '#451a03'
+      },
+      accent: {
+        primary: '#f97316',
+        secondary: '#fbbf24',
+        gradient: ['#f97316', '#fbbf24']
+      },
+      text: {
+        primary: '#fffbeb',
+        secondary: 'rgba(255, 251, 235, 0.7)',
+        muted: 'rgba(255, 251, 235, 0.5)'
+      },
+      border: {
+        default: 'rgba(255, 251, 235, 0.1)',
+        hover: 'rgba(255, 251, 235, 0.2)'
+      },
+      glow: {
+        primary: 'rgba(249, 115, 22, 0.4)',
+        secondary: 'rgba(251, 191, 36, 0.4)'
+      },
+      card: {
+        background: 'rgba(255, 251, 235, 0.05)',
+        backdropBlur: 'blur-sm'
+      }
+    }
+  }
+]
+
+export interface ImageFilterConfig {
+  brightness: number
+  contrast: number
+  saturation: number
+  grayscale: number
+  sepia: number
+  blur: number
+}
+
+export interface CropConfig {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export const DEFAULT_FILTER: ImageFilterConfig = {
+  brightness: 100,
+  contrast: 100,
+  saturation: 100,
+  grayscale: 0,
+  sepia: 0,
+  blur: 0
+}
+
+export const FILTER_PRESETS: { name: string; config: ImageFilterConfig }[] = [
+  { name: '原图', config: { ...DEFAULT_FILTER } },
+  { name: '明亮', config: { ...DEFAULT_FILTER, brightness: 120, contrast: 110 } },
+  { name: '复古', config: { ...DEFAULT_FILTER, sepia: 50, contrast: 90, saturation: 80 } },
+  { name: '黑白', config: { ...DEFAULT_FILTER, grayscale: 100, contrast: 110 } },
+  { name: '鲜艳', config: { ...DEFAULT_FILTER, saturation: 150, contrast: 110 } },
+  { name: '柔和', config: { ...DEFAULT_FILTER, brightness: 110, contrast: 90, saturation: 90 } },
+  { name: '电影', config: { ...DEFAULT_FILTER, contrast: 120, saturation: 80, brightness: 95 } },
+  { name: '冷色', config: { ...DEFAULT_FILTER, saturation: 80, brightness: 105 } }
+]
+
 export const BUILTIN_IMAGES: BuiltinImage[] = [
   {
     id: 'landscape1',
