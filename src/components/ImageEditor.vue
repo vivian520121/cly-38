@@ -219,7 +219,7 @@ const filterSliders = [
   <Teleport to="body">
     <Transition name="modal">
       <div
-        v-if="show && originalImage"
+        v-if="show"
         class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
         @click.self="closeEditor"
       >
@@ -245,6 +245,14 @@ const filterSliders = [
           <div class="flex flex-col lg:flex-row h-[calc(90vh-100px)]">
             <div class="flex-1 p-4 flex flex-col items-center justify-center bg-black/30">
               <div
+                v-if="!originalImage"
+                class="flex flex-col items-center justify-center text-[var(--text-muted)]"
+              >
+                <div class="w-12 h-12 border-4 border-[var(--border-default)] border-t-[var(--accent-primary)] rounded-full animate-spin mb-4" />
+                <p class="text-sm">加载图片中...</p>
+              </div>
+              <div
+                v-else
                 ref="containerRef"
                 class="relative w-[400px] h-[400px] bg-black/50 rounded-xl overflow-hidden cursor-move select-none"
                 @mousedown="handleMouseDown"
@@ -350,6 +358,7 @@ const filterSliders = [
                   :class="activeTab === 'crop'
                     ? 'text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 border-b-2 border-[var(--accent-primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'"
+                  :disabled="!originalImage"
                   @click="activeTab = 'crop'"
                 >
                   裁剪
@@ -359,6 +368,7 @@ const filterSliders = [
                   :class="activeTab === 'filters'
                     ? 'text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 border-b-2 border-[var(--accent-primary)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'"
+                  :disabled="!originalImage"
                   @click="activeTab = 'filters'"
                 >
                   滤镜
@@ -385,10 +395,11 @@ const filterSliders = [
                       <button
                         v-for="preset in FILTER_PRESETS"
                         :key="preset.name"
-                        class="aspect-square rounded-lg overflow-hidden border-2 transition-all relative group"
+                        class="aspect-square rounded-lg overflow-hidden border-2 transition-all relative group disabled:opacity-50 disabled:cursor-not-allowed"
                         :class="JSON.stringify(currentFilter) === JSON.stringify(preset.config)
                           ? 'border-[var(--accent-primary)]'
                           : 'border-transparent hover:border-[var(--border-hover)]'"
+                        :disabled="!originalImage"
                         @click="applyPreset(preset)"
                       >
                         <img
@@ -427,10 +438,11 @@ const filterSliders = [
                           :min="slider.min"
                           :max="slider.max"
                           :value="currentFilter[slider.key]"
-                          class="w-full h-2 rounded-full appearance-none cursor-pointer"
+                          class="w-full h-2 rounded-full appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           :style="{
                             background: `linear-gradient(to right, var(--accent-gradient-1) 0%, var(--accent-gradient-2) ${((currentFilter[slider.key] - slider.min) / (slider.max - slider.min)) * 100}%, var(--border-default) ${((currentFilter[slider.key] - slider.min) / (slider.max - slider.min)) * 100}%)`
                           }"
+                          :disabled="!originalImage"
                           @input="(e) => handleFilterChange(slider.key, Number((e.target as HTMLInputElement).value))"
                         />
                       </div>
@@ -443,7 +455,7 @@ const filterSliders = [
                 <button
                   class="w-full py-3 px-4 rounded-xl bg-accent-gradient text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg"
                   :style="{ boxShadow: '0 10px 25px var(--glow-primary)' }"
-                  :disabled="isProcessing"
+                  :disabled="isProcessing || !originalImage"
                   @click="confirmImage"
                 >
                   <Check :size="18" />
