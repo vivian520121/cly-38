@@ -53,8 +53,9 @@ const resetAll = () => {
   currentFilter.value = resetFilter()
   if (originalImage.value) {
     crop.value = getSquareCrop(originalImage.value.width, originalImage.value.height)
+    const fitScale = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
+    imageScale.value = fitScale
   }
-  imageScale.value = 1
   imageOffset.value = { x: 0, y: 0 }
 }
 
@@ -65,13 +66,17 @@ const handleMouseDown = (e: MouseEvent) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
-  const displayWidth = Math.min(previewContainerSize, originalImage.value.width * imageScale.value)
-  const displayHeight = Math.min(previewContainerSize, originalImage.value.height * imageScale.value)
+  const scaledWidth = originalImage.value.width * imageScale.value
+  const scaledHeight = originalImage.value.height * imageScale.value
+  const offsetX = (previewContainerSize - scaledWidth) / 2 + imageOffset.value.x
+  const offsetY = (previewContainerSize - scaledHeight) / 2 + imageOffset.value.y
 
-  const displayX = (previewContainerSize - displayWidth) / 2 + imageOffset.value.x
-  const displayY = (previewContainerSize - displayHeight) / 2 + imageOffset.value.y
+  const cropLeft = offsetX + crop.value.x * imageScale.value
+  const cropTop = offsetY + crop.value.y * imageScale.value
+  const cropRight = cropLeft + crop.value.width * imageScale.value
+  const cropBottom = cropTop + crop.value.height * imageScale.value
 
-  if (x >= displayX && x <= displayX + displayWidth && y >= displayY && y <= displayY + displayHeight) {
+  if (x >= cropLeft && x <= cropRight && y >= cropTop && y <= cropBottom) {
     isDragging.value = true
     dragStart.value = { x: e.clientX, y: e.clientY }
     cropStart.value = { x: crop.value.x, y: crop.value.y }
@@ -81,12 +86,11 @@ const handleMouseDown = (e: MouseEvent) => {
 const handleMouseMove = (e: MouseEvent) => {
   if (!isDragging.value || !originalImage.value) return
 
-  const scale = (originalImage.value.width * imageScale.value) / previewContainerSize
-  const dx = (e.clientX - dragStart.value.x) * scale
-  const dy = (e.clientY - dragStart.value.y) * scale
+  const dx = (e.clientX - dragStart.value.x) / imageScale.value
+  const dy = (e.clientY - dragStart.value.y) / imageScale.value
 
-  const newX = Math.max(0, Math.min(originalImage.value.width - crop.value.width, cropStart.value.x - dx))
-  const newY = Math.max(0, Math.min(originalImage.value.height - crop.value.height, cropStart.value.y - dy))
+  const newX = Math.max(0, Math.min(originalImage.value.width - crop.value.width, cropStart.value.x + dx))
+  const newY = Math.max(0, Math.min(originalImage.value.height - crop.value.height, cropStart.value.y + dy))
 
   crop.value = { ...crop.value, x: newX, y: newY }
 }
@@ -148,10 +152,11 @@ watch(() => props.imageFile, async (file) => {
       reader.onload = async (e) => {
         const dataUrl = e.target?.result as string
         originalImage.value = await loadImage(dataUrl)
+        const fitScale = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
+        imageScale.value = fitScale
+        imageOffset.value = { x: 0, y: 0 }
         crop.value = getSquareCrop(originalImage.value.width, originalImage.value.height)
         currentFilter.value = resetFilter()
-        imageScale.value = 1
-        imageOffset.value = { x: 0, y: 0 }
       }
       reader.readAsDataURL(file)
     } catch (err) {
@@ -189,8 +194,6 @@ const displayedImageStyle = computed(() => {
 const cropOverlayStyle = computed(() => {
   if (!originalImage.value) return {}
 
-  const displayScale = previewContainerSize / (originalImage.value.width * imageScale.value)
-
   const scaledWidth = originalImage.value.width * imageScale.value
   const scaledHeight = originalImage.value.height * imageScale.value
 
@@ -198,10 +201,10 @@ const cropOverlayStyle = computed(() => {
   const offsetY = (previewContainerSize - scaledHeight) / 2 + imageOffset.value.y
 
   return {
-    left: `${offsetX + crop.value.x * displayScale}px`,
-    top: `${offsetY + crop.value.y * displayScale}px`,
-    width: `${crop.value.width * displayScale}px`,
-    height: `${crop.value.height * displayScale}px`
+    left: `${offsetX + crop.value.x * imageScale.value}px`,
+    top: `${offsetY + crop.value.y * imageScale.value}px`,
+    width: `${crop.value.width * imageScale.value}px`,
+    height: `${crop.value.height * imageScale.value}px`
   }
 })
 
@@ -277,7 +280,7 @@ const filterSliders = [
                 >
                   <div class="absolute inset-0 bg-black/50" />
                   <div
-                    class="absolute border-2 border-white shadow-lg"
+                    class="absolute border-2 border-white shadow-lg pointer-events-auto cursor-move"
                     :style="cropOverlayStyle"
                   >
                     <div class="absolute -inset-[3px] border-2 border-white/30" />
