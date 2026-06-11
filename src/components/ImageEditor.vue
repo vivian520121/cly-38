@@ -36,8 +36,11 @@ const containerRef = ref<HTMLDivElement | null>(null)
 const imageDisplayRef = ref<HTMLDivElement | null>(null)
 
 const previewContainerSize = 400
-const imageScale = ref(1)
+const baseScale = ref(1)
+const zoomLevel = ref(1)
 const imageOffset = ref({ x: 0, y: 0 })
+
+const displayScale = computed(() => baseScale.value * zoomLevel.value)
 
 const filterStyle = computed(() => getFilterCSS(currentFilter.value))
 
@@ -53,8 +56,8 @@ const resetAll = () => {
   currentFilter.value = resetFilter()
   if (originalImage.value) {
     crop.value = getSquareCrop(originalImage.value.width, originalImage.value.height)
-    const fitScale = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
-    imageScale.value = fitScale
+    baseScale.value = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
+    zoomLevel.value = 1
   }
   imageOffset.value = { x: 0, y: 0 }
 }
@@ -66,15 +69,16 @@ const handleMouseDown = (e: MouseEvent) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
-  const scaledWidth = originalImage.value.width * imageScale.value
-  const scaledHeight = originalImage.value.height * imageScale.value
+  const ds = displayScale.value
+  const scaledWidth = originalImage.value.width * ds
+  const scaledHeight = originalImage.value.height * ds
   const offsetX = (previewContainerSize - scaledWidth) / 2 + imageOffset.value.x
   const offsetY = (previewContainerSize - scaledHeight) / 2 + imageOffset.value.y
 
-  const cropLeft = offsetX + crop.value.x * imageScale.value
-  const cropTop = offsetY + crop.value.y * imageScale.value
-  const cropRight = cropLeft + crop.value.width * imageScale.value
-  const cropBottom = cropTop + crop.value.height * imageScale.value
+  const cropLeft = offsetX + crop.value.x * ds
+  const cropTop = offsetY + crop.value.y * ds
+  const cropRight = cropLeft + crop.value.width * ds
+  const cropBottom = cropTop + crop.value.height * ds
 
   if (x >= cropLeft && x <= cropRight && y >= cropTop && y <= cropBottom) {
     isDragging.value = true
@@ -86,8 +90,9 @@ const handleMouseDown = (e: MouseEvent) => {
 const handleMouseMove = (e: MouseEvent) => {
   if (!isDragging.value || !originalImage.value) return
 
-  const dx = (e.clientX - dragStart.value.x) / imageScale.value
-  const dy = (e.clientY - dragStart.value.y) / imageScale.value
+  const ds = displayScale.value
+  const dx = (e.clientX - dragStart.value.x) / ds
+  const dy = (e.clientY - dragStart.value.y) / ds
 
   const newX = Math.max(0, Math.min(originalImage.value.width - crop.value.width, cropStart.value.x + dx))
   const newY = Math.max(0, Math.min(originalImage.value.height - crop.value.height, cropStart.value.y + dy))
@@ -100,8 +105,8 @@ const handleMouseUp = () => {
 }
 
 const adjustZoom = (delta: number) => {
-  const newScale = Math.max(0.5, Math.min(3, imageScale.value + delta))
-  imageScale.value = newScale
+  const newZoom = Math.max(0.5, Math.min(3, zoomLevel.value + delta))
+  zoomLevel.value = newZoom
 }
 
 const handleCropSizeChange = (delta: number) => {
@@ -152,8 +157,8 @@ watch(() => props.imageFile, async (file) => {
       reader.onload = async (e) => {
         const dataUrl = e.target?.result as string
         originalImage.value = await loadImage(dataUrl)
-        const fitScale = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
-        imageScale.value = fitScale
+        baseScale.value = Math.min(1, previewContainerSize / Math.max(originalImage.value.width, originalImage.value.height))
+        zoomLevel.value = 1
         imageOffset.value = { x: 0, y: 0 }
         crop.value = getSquareCrop(originalImage.value.width, originalImage.value.height)
         currentFilter.value = resetFilter()
@@ -180,8 +185,9 @@ onUnmounted(() => {
 const displayedImageStyle = computed(() => {
   if (!originalImage.value) return {}
 
-  const scaledWidth = originalImage.value.width * imageScale.value
-  const scaledHeight = originalImage.value.height * imageScale.value
+  const ds = displayScale.value
+  const scaledWidth = originalImage.value.width * ds
+  const scaledHeight = originalImage.value.height * ds
 
   return {
     width: `${scaledWidth}px`,
@@ -194,17 +200,18 @@ const displayedImageStyle = computed(() => {
 const cropOverlayStyle = computed(() => {
   if (!originalImage.value) return {}
 
-  const scaledWidth = originalImage.value.width * imageScale.value
-  const scaledHeight = originalImage.value.height * imageScale.value
+  const ds = displayScale.value
+  const scaledWidth = originalImage.value.width * ds
+  const scaledHeight = originalImage.value.height * ds
 
   const offsetX = (previewContainerSize - scaledWidth) / 2 + imageOffset.value.x
   const offsetY = (previewContainerSize - scaledHeight) / 2 + imageOffset.value.y
 
   return {
-    left: `${offsetX + crop.value.x * imageScale.value}px`,
-    top: `${offsetY + crop.value.y * imageScale.value}px`,
-    width: `${crop.value.width * imageScale.value}px`,
-    height: `${crop.value.height * imageScale.value}px`
+    left: `${offsetX + crop.value.x * ds}px`,
+    top: `${offsetY + crop.value.y * ds}px`,
+    width: `${crop.value.width * ds}px`,
+    height: `${crop.value.height * ds}px`
   }
 })
 
@@ -312,7 +319,7 @@ const filterSliders = [
                   <ZoomOut :size="18" />
                 </button>
                 <span class="text-sm text-[var(--text-muted)] w-16 text-center">
-                  {{ Math.round(imageScale * 100) }}%
+                  {{ Math.round(zoomLevel * 100) }}%
                 </span>
                 <button
                   class="w-10 h-10 rounded-xl bg-[var(--card-bg)] border border-[var(--border-default)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
